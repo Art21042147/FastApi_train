@@ -9,3 +9,7 @@ async def welcome():
 @app.get("/main")
 async def welcome() -> dict:
     return {"message": "Main Page"}
+
+@app.get("/user/{first_name}/{last_name}")
+async def news(first_name: str, last_name: str) -> dict:
+    return {"message": f"Hello, {first_name} {last_name}"}
