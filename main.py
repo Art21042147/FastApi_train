@@ -1,26 +1,34 @@
-from fastapi import FastAPI, Path
-from typing import Annotated
+from fastapi import FastAPI
 
 app = FastAPI()
 
+messages_db = {"0": "First post in FastAPI"}
+
 @app.get("/")
-async def welcome():
-    return {"message": "Hello World"}
+async def get_all_messages() -> dict:
+    return messages_db
 
-@app.get("/main")
-async def welcome() -> dict:
-    return {"message": "Main Page"}
+@app.get("/message/{message_id}")
+async def get_message(message_id: str) -> dict:
+    return messages_db[message_id]
 
-@app.get("/user/Jonathan/Livingston")
-async def news() -> dict:
-    return {"message": "Hello, QA!"}
+@app.post("/message")
+async def create_message(message: str) -> str:
+    current_index = str(int(max(messages_db, key=int)) + 1)
+    messages_db[current_index] = message
+    return "New message created"
 
-@app.get("/id")
-async def id_login(username: str = "Art", age: int = 24) -> dict:
-    return {"User": username, "Age": age}
+@app.put("/message/{message_id}")
+async def update_message(message_id: str, message: str) -> str:
+    messages_db[message_id] = message
+    return "Message updated"
 
-@app.get("/user/{username}/{id}")
-async def news(username: Annotated[str, Path(
-    min_length=3, max_length=15, description="Enter your username", example="Jonathan")],
-        id: int = Path(ge=0, le=100, description="Enter your id", example=13)) -> dict:
-    return {"message": f"Hello, {username} {id}"}
+@app.delete("/message/{message_id}")
+async def delete_message(message_id: str) -> str:
+    messages_db.pop(message_id)
+    return f"Message {message_id} deleted"
+
+@app.delete("/")
+async def delete_all_messages() -> str:
+    messages_db.clear()
+    return "All messages deleted"
