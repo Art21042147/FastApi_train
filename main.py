@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Body, HTTPException, Request
+from fastapi import FastAPI, Body, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from typing import List
 from fastapi.templating import Jinja2Templates
+from starlette import status
 
 app = FastAPI()
 
@@ -29,11 +30,14 @@ def get_message(request: Request, message_id: int) -> HTMLResponse:
         raise HTTPException(status_code=404, detail="Message not found")
 
 
-@app.post("/message")
-def create_message(message: Message) -> str:
-    message.id = len(messages_db)
-    messages_db.append(message)
-    return f"Message created!"
+@app.post("/", status_code=status.HTTP_201_CREATED)
+def create_message(request: Request, message: str = Form()) -> HTMLResponse:
+    if messages_db:
+        message_id = max(messages_db, key=lambda m: m.id).id + 1
+    else:
+        message_id = 0
+    messages_db.append(Message(id=message_id, text=message))
+    return templates.TemplateResponse("message.html", {"request": request, "messages": messages_db})
 
 
 @app.put("/message/{message_id}")
